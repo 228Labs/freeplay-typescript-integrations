@@ -1,11 +1,31 @@
 import { OpenInferenceSimpleSpanProcessor } from "@arizeai/openinference-vercel";
-import { type Tracer } from "@opentelemetry/api";
+import type { Attributes } from "@opentelemetry/api";
 import type {
   ReadableSpan,
   SpanExporter,
   SpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import { OTLPHttpProtoTraceExporter } from "@vercel/otel";
+import {
+  bufferToolSpan,
+  extractToolCallIdsFromResponse,
+  flushBufferedToolSpans,
+} from "./tools.js";
+
+/**
+ * Helper type to allow mutation of ReadableSpan properties.
+ *
+ * ReadableSpan properties are readonly by design to prevent accidental modifications.
+ * However, we need to mutate span attributes and names during our preprocessing phase
+ * before they're exported (e.g., mapping Vercel AI SDK attributes to Freeplay/OpenInference
+ * conventions, enriching tool spans with parent metadata).
+ *
+ * This type removes the readonly modifiers, making it clear when we're intentionally
+ * bypassing the readonly constraint for our specific use case.
+ */
+type MutableSpan = {
+  -readonly [K in keyof ReadableSpan]: ReadableSpan[K];
+};
 
 const DEFAULT_COLLECTOR_URL = "https://api.freeplay.ai/api/v0/otel/v1/traces";
 const API_KEY_ENV = "FREEPLAY_API_KEY";
@@ -30,15 +50,6 @@ export interface CreateFreeplaySpanProcessorOptions {
   endpoint?: string;
 }
 
-export interface ExperimentalTelemetryConfig {
-  isEnabled: boolean;
-  recordInputs?: boolean;
-  recordOutputs?: boolean;
-  functionId?: string;
-  metadata?: Record<string, unknown>;
-  tracer?: Tracer;
-}
-
 /**
  * Create a Freeplay span processor that can be passed to registerOTel().
  * Handles attribute mapping, tool call linking, and span buffering.
@@ -46,7 +57,7 @@ export interface ExperimentalTelemetryConfig {
 export const createFreeplaySpanProcessor = (
   options: CreateFreeplaySpanProcessorOptions = {},
 ): SpanProcessor => {
-  const env = getProcessEnv();
+  const env = process.env;
 
   const apiKey = options.apiKey ?? env?.[API_KEY_ENV];
   if (!apiKey) {
@@ -64,13 +75,15 @@ export const createFreeplaySpanProcessor = (
 
   const endpoint =
     options.endpoint ?? env?.[ENDPOINT_ENV] ?? DEFAULT_COLLECTOR_URL;
-  const headers = buildHeaders(apiKey, projectId);
 
   let baseExporter: SpanExporter;
   try {
     baseExporter = new OTLPHttpProtoTraceExporter({
       url: endpoint,
-      headers,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "X-Freeplay-Project-Id": projectId,
+      },
     });
   } catch (error) {
     throw new Error(
@@ -82,7 +95,8 @@ export const createFreeplaySpanProcessor = (
 
   const spanFilter = (span: ReadableSpan): boolean => {
     applyStandardAttributeMappings(span);
-    return createDefaultSpanFilter(span);
+    sanitizeSpanAttributes(span);
+    return true;
   };
 
   return new OpenInferenceSimpleSpanProcessor({
@@ -91,128 +105,23 @@ export const createFreeplaySpanProcessor = (
   });
 };
 
-/**
- * Default span filter that allows all spans and sanitizes attributes.
- */
-export const createDefaultSpanFilter = (span: ReadableSpan): boolean => {
-  sanitizeSpanAttributes(span);
-  return true;
-};
-
 const sanitizeSpanAttributes = (span: ReadableSpan): void => {
-  const cleanedAttributes: Record<string, unknown> = {};
+  const cleanedAttributes: Attributes = {};
   for (const [key, value] of Object.entries(span.attributes ?? {})) {
     if (value !== undefined && value !== null && value !== "") {
       cleanedAttributes[key] = value;
     }
   }
-  (span as unknown as { attributes: Record<string, unknown> }).attributes =
-    cleanedAttributes;
-};
-
-export const FREEPLAY_DEFAULT_COLLECTOR_URL = DEFAULT_COLLECTOR_URL;
-
-const getProcessEnv = (): NodeJS.ProcessEnv | undefined => {
-  if (typeof process !== "undefined" && process.env) {
-    return process.env;
-  }
-  return undefined;
-};
-
-const buildHeaders = (
-  apiKey: string,
-  projectId: string,
-  overrides?: Record<string, string>,
-): Record<string, string> => {
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    "X-Freeplay-Project-Id": projectId,
-  };
-
-  if (overrides) {
-    for (const [key, value] of Object.entries(overrides)) {
-      if (value !== undefined) {
-        headers[key] = value;
-      }
-    }
-  }
-
-  return headers;
-};
-
-// Simple cache mapping toolCallId -> {spanId, sessionId}
-// Used to link tool spans to their parent LLM spans
-const toolCallIdCache = new Map<
-  string,
-  { spanId: string; sessionId: string }
->();
-
-const cacheToolCallMetadata = (
-  toolCallId: string,
-  spanId: string,
-  sessionId: string,
-): void => {
-  toolCallIdCache.set(toolCallId, { spanId, sessionId });
-};
-
-const getToolCallMetadata = (
-  toolCallId: string,
-): { spanId: string; sessionId: string } | undefined => {
-  return toolCallIdCache.get(toolCallId);
-};
-
-const extractAndCacheToolCalls = (
-  span: ReadableSpan,
-  sessionId: string,
-): void => {
-  try {
-    const attrs = (span.attributes ?? {}) as Record<string, unknown>;
-    const toolCallsRaw = attrs["ai.response.toolCalls"];
-    if (typeof toolCallsRaw !== "string") return;
-
-    const parsed = JSON.parse(toolCallsRaw);
-    if (!Array.isArray(parsed)) return;
-
-    const spanId = span.spanContext().spanId;
-    for (const tc of parsed) {
-      if (tc && typeof tc.toolCallId === "string") {
-        cacheToolCallMetadata(tc.toolCallId, spanId, sessionId);
-      }
-    }
-  } catch {
-    // ignore parsing errors
-  }
-};
-
-const applyToolCallMetadataIfMatches = (span: ReadableSpan): void => {
-  const attrs = (span.attributes ?? {}) as Record<string, unknown>;
-  const toolCallId = attrs["ai.toolCall.id"];
-  if (typeof toolCallId !== "string") return;
-
-  const cached = getToolCallMetadata(toolCallId);
-  if (!cached) {
-    return;
-  }
-
-  // Set cached parent spanId and sessionId on the tool span
-  if (!attrs["parent_span_id"]) {
-    attrs["parent_span_id"] = cached.spanId;
-  }
-  if (!attrs["freeplay.session.id"]) {
-    attrs["freeplay.session.id"] = cached.sessionId;
-  }
-  (span as unknown as { attributes: Record<string, unknown> }).attributes =
-    attrs;
+  (span as unknown as MutableSpan).attributes = cleanedAttributes;
 };
 
 /**
- * Apply our built-in attribute mappings and cache tool call metadata.
+ * Apply Freeplay-specific attribute mappings to spans.
+ *
+ * Maps Vercel AI SDK metadata to Freeplay's expected attribute names.
  */
 const applyStandardAttributeMappings = (span: ReadableSpan): void => {
-  const attrs = (span.attributes ?? {}) as Record<string, unknown>;
-
-  // Check for tool call metadata early
-  applyToolCallMetadataIfMatches(span);
+  const attrs = (span.attributes ?? {}) as Attributes;
 
   // 1) Map sessionId: ai.telemetry.metadata.sessionId -> freeplay.session.id
   const sessionIdRaw = attrs["ai.telemetry.metadata.sessionId"];
@@ -226,12 +135,6 @@ const applyStandardAttributeMappings = (span: ReadableSpan): void => {
     delete attrs["ai.telemetry.metadata.sessionId"];
   }
 
-  // Extract and cache tool call IDs from ai.response.toolCalls if present
-  const mappedSession = attrs["freeplay.session.id"];
-  if (typeof mappedSession === "string" && mappedSession.length > 0) {
-    extractAndCacheToolCalls(span, mappedSession);
-  }
-
   // 2) Map functionId: ai.telemetry.functionId -> span.name
   const functionIdRaw = attrs["ai.telemetry.functionId"];
   if (functionIdRaw != null) {
@@ -239,64 +142,20 @@ const applyStandardAttributeMappings = (span: ReadableSpan): void => {
       typeof functionIdRaw === "string" ? functionIdRaw : String(functionIdRaw);
     const trimmedId = functionId.trim();
     if (trimmedId.length > 0) {
-      (span as unknown as { name: string }).name = trimmedId;
+      (span as unknown as MutableSpan).name = trimmedId;
     }
     delete attrs["ai.telemetry.functionId"];
   }
 
-  (span as unknown as { attributes: Record<string, unknown> }).attributes =
-    attrs;
+  (span as unknown as MutableSpan).attributes = attrs;
 };
 
-// Buffer for tool spans waiting for their parent LLM span data
-interface BufferedToolSpan {
-  span: ReadableSpan;
-}
-
-const toolSpanBuffer = new Map<string, BufferedToolSpan>(); // keyed by toolCallId
-
-const bufferToolSpan = (span: ReadableSpan): void => {
-  const attrs = (span.attributes ?? {}) as Record<string, unknown>;
-  const toolCallId = attrs["ai.toolCall.id"];
-  if (typeof toolCallId !== "string") return;
-
-  toolSpanBuffer.set(toolCallId, { span });
-};
-
-const flushBufferedToolSpans = (
-  parentSpanId: string,
-  sessionId: string | undefined,
-  toolCallIds: string[],
-): ReadableSpan[] => {
-  const flushed: ReadableSpan[] = [];
-
-  for (const toolCallId of toolCallIds) {
-    const buffered = toolSpanBuffer.get(toolCallId);
-    if (!buffered) {
-      continue;
-    }
-
-    const span = buffered.span;
-    const attrs = (span.attributes ?? {}) as Record<string, unknown>;
-
-    // Enrich with parent data
-    if (!attrs["parent_span_id"]) {
-      attrs["parent_span_id"] = parentSpanId;
-    }
-    if (!attrs["freeplay.session.id"]) {
-      attrs["freeplay.session.id"] = sessionId ?? "";
-    }
-
-    (span as unknown as { attributes: Record<string, unknown> }).attributes =
-      attrs;
-
-    flushed.push(span);
-    toolSpanBuffer.delete(toolCallId);
-  }
-
-  return flushed;
-};
-
+/**
+ * Creates a buffering exporter that wraps a delegate exporter.
+ *
+ * This exporter intercepts TOOL spans and holds them until their parent LLM span
+ * arrives, allowing us to properly link them together before export.
+ */
 const createBufferingExporter = (delegate: SpanExporter): SpanExporter => {
   return {
     export: (spans: ReadableSpan[], resultCallback) => {
@@ -308,7 +167,7 @@ const createBufferingExporter = (delegate: SpanExporter): SpanExporter => {
 
         // First pass: extract tool call IDs from LLM spans and collect spans to export
         for (const span of spans) {
-          const attrs = (span.attributes ?? {}) as Record<string, unknown>;
+          const attrs = (span.attributes ?? {}) as Attributes;
           const oiKind = attrs["openinference.span.kind"];
 
           if (oiKind === "TOOL") {
@@ -362,22 +221,4 @@ const createBufferingExporter = (delegate: SpanExporter): SpanExporter => {
     shutdown: () => delegate.shutdown(),
     forceFlush: () => delegate.forceFlush?.() ?? Promise.resolve(),
   };
-};
-
-const extractToolCallIdsFromResponse = (toolCallsRaw: unknown): string[] => {
-  if (typeof toolCallsRaw !== "string") return [];
-  try {
-    const parsed = JSON.parse(toolCallsRaw);
-    if (!Array.isArray(parsed)) return [];
-
-    const toolCallIds: string[] = [];
-    for (const tc of parsed) {
-      if (tc && typeof tc.toolCallId === "string") {
-        toolCallIds.push(tc.toolCallId);
-      }
-    }
-    return toolCallIds;
-  } catch {
-    return [];
-  }
 };
