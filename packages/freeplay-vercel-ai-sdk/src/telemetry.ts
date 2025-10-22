@@ -123,18 +123,6 @@ const sanitizeSpanAttributes = (span: ReadableSpan): void => {
 const applyStandardAttributeMappings = (span: ReadableSpan): void => {
   const attrs = (span.attributes ?? {}) as Attributes;
 
-  // 1) Map sessionId: ai.telemetry.metadata.sessionId -> freeplay.session.id
-  const sessionIdRaw = attrs["ai.telemetry.metadata.sessionId"];
-  if (sessionIdRaw != null) {
-    const sessionId = (
-      typeof sessionIdRaw === "string" ? sessionIdRaw : String(sessionIdRaw)
-    ).trim();
-    if (sessionId && !attrs["freeplay.session.id"]) {
-      attrs["freeplay.session.id"] = sessionId;
-    }
-    delete attrs["ai.telemetry.metadata.sessionId"];
-  }
-
   // 2) Map functionId: ai.telemetry.functionId -> span.name
   const functionIdRaw = attrs["ai.telemetry.functionId"];
   if (functionIdRaw != null) {
@@ -182,7 +170,9 @@ const createBufferingExporter = (delegate: SpanExporter): SpanExporter => {
             if (extractedIds.length > 0) {
               const currentSpanId = span.spanContext().spanId;
               llmParentSpanId = currentSpanId;
-              llmSessionId = attrs["freeplay.session.id"] as string | undefined;
+              llmSessionId = attrs["ai.telemetry.metadata.sessionId"] as
+                | string
+                | undefined;
               toolCallIds.push(...extractedIds);
             }
           }
