@@ -20,7 +20,9 @@
     "lint:fix": "pnpm -r lint:fix",
     "format": "pnpm -r format",
     "format:fix": "pnpm -r format:fix",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "example:next": "pnpm --filter freeplay-vercel-ai-sdk-next-example dev",
+    "example:node": "pnpm --filter server --filter client dev"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
