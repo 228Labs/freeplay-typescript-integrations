@@ -1,5 +1,5 @@
 import { registerOTel } from "@vercel/otel";
-import { createFreeplaySpanProcessor } from "freeplay-vercel-ai-sdk";
+import { createFreeplaySpanProcessor } from "@freeplayai/vercel";
 
 export function register() {
   const freeplayProcessor = createFreeplaySpanProcessor();

@@ -9,7 +9,7 @@ import {
   getPrompt,
   FreeplayModel,
   createFreeplayTelemetry,
-} from "freeplay-vercel-ai-sdk";
+} from "@freeplayai/vercel";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

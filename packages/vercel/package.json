@@ -1,5 +1,5 @@
 {
-  "name": "freeplay-vercel-ai-sdk",
+  "name": "@freeplayai/vercel",
   "version": "0.1.0",
   "description": "OpenTelemetry instrumentation for Vercel AI SDK with Freeplay integration - production-ready tracing and telemetry.",
   "keywords": [
@@ -20,12 +20,12 @@
   "author": "228Labs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/freeplay-ai/freeplay-vercel-ai-sdk.git",
-    "directory": "packages/freeplay-vercel-ai-sdk"
+    "url": "https://github.com/freeplay-ai/vercel.git",
+    "directory": "packages/vercel"
   },
-  "homepage": "https://github.com/freeplay-ai/freeplay-vercel-ai-sdk#readme",
+  "homepage": "https://github.com/freeplay-ai/vercel#readme",
   "bugs": {
-    "url": "https://github.com/freeplay-ai/freeplay-vercel-ai-sdk/issues"
+    "url": "https://github.com/freeplay-ai/vercel/issues"
   },
   "type": "module",
   "sideEffects": false,

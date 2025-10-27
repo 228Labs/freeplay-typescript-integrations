@@ -59,7 +59,7 @@ export const getPrompt = async ({
  *
  * @example
  * ```typescript
- * import { getPrompt, FreeplayModel } from 'freeplay-vercel-ai-sdk';
+ * import { getPrompt, FreeplayModel } from '@freeplayai/vercel';
  *
  * const prompt = await getPrompt({ templateName: 'my-template' });
  * const model = await FreeplayModel(prompt);

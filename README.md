@@ -6,7 +6,7 @@ This repository contains Freeplay integrations for TypeScript agent frameworks.
 
 This is a monorepo containing the following packages:
 
-### [freeplay-vercel-ai-sdk](packages/freeplay-vercel-ai-sdk/README.md)
+### [vercel](packages/vercel/README.md)
 
 Freeplay integration for Vercel AI SDK with OpenTelemetry observability.
 
@@ -29,10 +29,10 @@ pnpm example:node
 
 ### Available Examples
 
-- **[Next.js Example](packages/freeplay-vercel-ai-sdk/examples/next/)** - Full-featured Next.js app with MCP support
-- **[Node.js Example](packages/freeplay-vercel-ai-sdk/examples/node/)** - Express backend + React frontend with streaming
+- **[Next.js Example](packages/vercel/examples/next/)** - Full-featured Next.js app with MCP support
+- **[Node.js Example](packages/vercel/examples/node/)** - Express backend + React frontend with streaming
 
-📖 See the [examples directory](packages/freeplay-vercel-ai-sdk/examples/) for detailed documentation and [SETUP.md](packages/freeplay-vercel-ai-sdk/examples/SETUP.md) for a complete setup guide.
+📖 See the [examples directory](packages/vercel/examples/) for detailed documentation and [SETUP.md](packages/vercel/examples/SETUP.md) for a complete setup guide.
 
 ## Development
 

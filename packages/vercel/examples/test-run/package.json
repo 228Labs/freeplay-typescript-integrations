@@ -1,5 +1,5 @@
 {
-  "name": "freeplay-vercel-ai-sdk-test-run-example",
+  "name": "vercel-test-run-example",
   "description": "⚠️ DISABLED - This example is currently disabled and not included in workspace builds",
   "version": "0.0.1",
   "private": true,
@@ -18,7 +18,7 @@
     "ai": "^5.0.44",
     "dotenv": "^16.3.1",
     "freeplay": "^0.5.1",
-    "freeplay-vercel-ai-sdk": "^0.1.0",
+    "@freeplayai/vercel": "^0.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

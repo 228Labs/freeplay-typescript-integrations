@@ -9,7 +9,7 @@ import {
   getPrompt,
   FreeplayModel,
   createFreeplayTelemetry,
-} from "freeplay-vercel-ai-sdk";
+} from "@freeplayai/vercel";
 
 export async function POST(req: Request) {
   const url = new URL("http://localhost:3000/mcp/server");

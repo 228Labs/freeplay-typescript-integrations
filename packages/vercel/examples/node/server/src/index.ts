@@ -16,7 +16,7 @@ import {
   getPrompt,
   FreeplayModel,
   createFreeplayTelemetry,
-} from "freeplay-vercel-ai-sdk";
+} from "@freeplayai/vercel";
 import {
   expressToIncomingMessage,
   wrapExpressResponse,

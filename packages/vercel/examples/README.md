@@ -29,6 +29,6 @@ This uses workspace dependencies and is ideal for testing or contributing.
 
 ### Standalone (Starting Your Own Project)
 
-Each example can be copied out and used independently. The examples reference the published `freeplay-vercel-ai-sdk` package from npm, so they work as standalone starting points for your own projects.
+Each example can be copied out and used independently. The examples reference the published `@freeplayai/vercel` package from npm, so they work as standalone starting points for your own projects.
 
 See each example's README for detailed standalone setup instructions.

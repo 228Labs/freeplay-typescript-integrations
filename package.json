@@ -21,9 +21,9 @@
     "format": "pnpm -r format",
     "format:fix": "pnpm -r format:fix",
     "typecheck": "pnpm -r typecheck",
-    "example:next": "pnpm --filter freeplay-vercel-ai-sdk build && pnpm --filter freeplay-vercel-ai-sdk-next-example dev",
-    "example:node": "pnpm --filter freeplay-vercel-ai-sdk build && pnpm --filter freeplay-vercel-ai-sdk-node-example dev",
-    "example:test-run": "pnpm --filter freeplay-vercel-ai-sdk build && pnpm --filter freeplay-vercel-ai-sdk-test-run-example start"
+    "example:next": "pnpm --filter vercel build && pnpm --filter vercel-next-example dev",
+    "example:node": "pnpm --filter vercel build && pnpm --filter vercel-node-example dev",
+    "example:test-run": "pnpm --filter vercel build && pnpm --filter vercel-test-run-example start"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
@@ -37,7 +37,7 @@
   },
   "pnpm": {
     "overrides": {
-      "freeplay-vercel-ai-sdk": "workspace:*"
+      "@freeplayai/vercel": "workspace:*"
     }
   }
 }

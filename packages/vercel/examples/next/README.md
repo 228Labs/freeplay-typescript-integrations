@@ -26,7 +26,7 @@ To use this example as a starting point for your own project:
 
 ```bash
 # 1. Copy this example directory to your project location
-cp -r packages/freeplay-vercel-ai-sdk/examples/next my-freeplay-app
+cp -r packages/vercel/examples/next my-freeplay-app
 cd my-freeplay-app
 
 # 2. Install dependencies (uses published package from npm)

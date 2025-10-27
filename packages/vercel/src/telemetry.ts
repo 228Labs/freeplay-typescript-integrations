@@ -261,7 +261,7 @@ export interface CreateFreeplayTelemetryOptions {
  *
  * @example
  * ```typescript
- * import { getPrompt, FreeplayModel, createFreeplayTelemetry } from 'freeplay-vercel-ai-sdk';
+ * import { getPrompt, FreeplayModel, createFreeplayTelemetry } from '@freeplayai/vercel';
  *
  * const inputVariables = { accent: 'cowboy' };
  * const prompt = await getPrompt({

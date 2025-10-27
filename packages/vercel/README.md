@@ -12,7 +12,7 @@ OpenTelemetry instrumentation for the [Vercel AI SDK](https://ai-sdk.dev/docs) w
 ## Installation
 
 ```bash
-npm install freeplay-vercel-ai-sdk @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
+npm install @freeplayai/vercel @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
 ```
 
 <details>
@@ -20,13 +20,13 @@ npm install freeplay-vercel-ai-sdk @vercel/otel @arizeai/openinference-vercel @o
 
 ```bash
 # pnpm
-pnpm add freeplay-vercel-ai-sdk @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
+pnpm add @freeplayai/vercel @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
 
 # yarn
-yarn add freeplay-vercel-ai-sdk @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
+yarn add @freeplayai/vercel @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
 
 # bun
-bun add freeplay-vercel-ai-sdk @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
+bun add @freeplayai/vercel @vercel/otel @arizeai/openinference-vercel @opentelemetry/api @opentelemetry/sdk-trace-base
 ```
 
 </details>
@@ -55,7 +55,7 @@ Create an `instrumentation.ts` file at your project root:
 ```ts
 // instrumentation.ts
 import { registerOTel } from "@vercel/otel";
-import { createFreeplaySpanProcessor } from "freeplay-vercel-ai-sdk";
+import { createFreeplaySpanProcessor } from "@freeplayai/vercel";
 
 export function register() {
   registerOTel({
@@ -98,7 +98,7 @@ Initialize the SDK at the top of your entry point:
 ```ts
 // server.ts or index.ts
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { createFreeplaySpanProcessor } from "freeplay-vercel-ai-sdk";
+import { createFreeplaySpanProcessor } from "@freeplayai/vercel";
 
 const sdk = new NodeSDK({
   spanProcessors: [createFreeplaySpanProcessor()],

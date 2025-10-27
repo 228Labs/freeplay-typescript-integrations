@@ -13,7 +13,7 @@ loadEnvConfig(projectDir);
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  transpilePackages: ["freeplay-vercel-ai-sdk"], // Transpile the linked package
+  transpilePackages: ["@freeplayai/vercel"], // Transpile the linked package
   outputFileTracingRoot: path.join(__dirname, "../../"), // Support monorepo structure
   webpack: (config, { isServer }) => {
     if (isServer) {

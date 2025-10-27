@@ -26,8 +26,8 @@ To use this example as a starting point for your own project:
 
 ```bash
 # 1. Copy the server and client directories
-cp -r packages/freeplay-vercel-ai-sdk/examples/node/server my-app/server
-cp -r packages/freeplay-vercel-ai-sdk/examples/node/client my-app/client
+cp -r packages/vercel/examples/node/server my-app/server
+cp -r packages/vercel/examples/node/client my-app/client
 cd my-app
 
 # 2. Install server dependencies

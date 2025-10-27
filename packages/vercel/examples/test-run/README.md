@@ -59,14 +59,14 @@ From the repository root:
 pnpm install
 
 # Run the test
-pnpm --filter freeplay-vercel-ai-sdk-test-run-example start
+pnpm --filter vercel-test-run-example start
 ```
 
 ### Option 2: Standalone Setup
 
 ```bash
 # 1. Copy this directory to your project
-cp -r packages/freeplay-vercel-ai-sdk/examples/test-run my-test-runner
+cp -r packages/vercel/examples/test-run my-test-runner
 cd my-test-runner
 
 # 2. Install dependencies
