@@ -73,6 +73,9 @@ export const FreeplayModel = async (
   // Normalize provider name to lowercase for matching
   const normalizedProvider = provider.toLowerCase();
 
+  if (process.env.AI_GATEWAY_API_KEY) {
+    return `${normalizedProvider}/${model}`;
+  }
   // Dynamically import the provider to avoid bundling issues in edge environments
   if (normalizedProvider === "openai") {
     const { openai } = await import("@ai-sdk/openai");

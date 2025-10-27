@@ -4,7 +4,11 @@
 
 Demonstrates a basic chat endpoint using Next.js + the Vercel AI SDK instrumented with Freeplay's Vercel OpenTelemetry integration.
 
-## Quick Start
+## How to run
+
+### Environment Setup
+
+Create a `.env` or `.env.local` file within the `examples` directory, following the format specified [here](../../README.md#environment).
 
 ### Option 1: Clone & Run (Recommended for Testing)
 
@@ -39,15 +43,3 @@ cp .env.example .env.local
 # 4. Run the development server
 npm run dev
 ```
-
-### Environment Variables
-
-Required variables:
-
-```env
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-FREEPLAY_API_KEY=your_freeplay_api_key_here
-FREEPLAY_PROJECT_ID=your_freeplay_project_id_here
-```
-
-See the [main README](../../README.md) for how to obtain Freeplay credentials.

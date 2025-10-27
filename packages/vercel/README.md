@@ -1,13 +1,6 @@
-# Freeplay Vercel AI SDK
+# @freeplayai/vercel
 
-OpenTelemetry instrumentation for the [Vercel AI SDK](https://ai-sdk.dev/docs) with Freeplay integration.
-
-## Features
-
-- ✅ Automatic tracing of LLM calls and tool executions
-- ✅ Drop-in span processor for `@vercel/otel`
-- ✅ Session tracking and metadata support
-- ✅ Works with Next.js and Node.js
+Freeplay integration for the [Vercel AI SDK](https://ai-sdk.dev/docs) with OpenTelemetry observability and Freeplay prompt management.
 
 ## Installation
 
@@ -31,6 +24,16 @@ bun add @freeplayai/vercel @vercel/otel @arizeai/openinference-vercel @opentelem
 
 </details>
 
+## ⛰️ Choose your own adventure
+
+### 🚀 Quick Start Examples
+
+Want see the library in action ASAP? Go straight to the [examples](./examples/README.md) and see Freeplay Telemetry flowing in minutes.
+
+### 📚 Existing Project Integration
+
+If you're already using the Vercel AI SDK, you can easily integrate with Freeplay by jumping straight to the [Quick Start](#quick-start) guide.
+
 ## Quick Start
 
 ### Environment
@@ -40,13 +43,35 @@ Create a `.env` or `.env.local` file with your Freeplay credentials:
 ```env
 FREEPLAY_API_KEY=your_api_key_here
 FREEPLAY_PROJECT_ID=your_project_id_here
-```
-
-Optional: customize the endpoint (defaults to `https://api.freeplay.ai/api/v0/otel/v1/traces`):
-
-```env
+# Optional: defaults to https://api.freeplay.ai/api/v0/otel/v1/traces
 FREEPLAY_OTEL_ENDPOINT=https://your-subdomain.freeplay.ai/api/v0/otel/v1/traces
 ```
+
+<details>
+<summary>Supported model providers</summary>
+
+```bash
+# AI Gateway - Model still must be OpenAI, Anthropic, Google or Vertex
+AI_GATEWAY_API_KEY=
+
+# OpenAI
+OPENAI_API_KEY=
+
+# Anthropic
+ANTHROPIC_API_KEY=
+
+# Google
+GOOGLE_GENERATIVE_AI_API_KEY=
+
+# Google Vertex
+GOOGLE_VERTEX_LOCATION=
+GOOGLE_VERTEX_PROJECT=
+GOOGLE_CLIENT_EMAIL=
+GOOGLE_PRIVATE_KEY=
+GOOGLE_PRIVATE_KEY_ID=
+```
+
+</details>
 
 ### Next.js Setup
 
@@ -59,13 +84,15 @@ import { createFreeplaySpanProcessor } from "@freeplayai/vercel";
 
 export function register() {
   registerOTel({
-    serviceName: "fp-otel-nextjs-example",
+    serviceName: "otel-nextjs-example",
     spanProcessors: [createFreeplaySpanProcessor()],
   });
 }
 ```
 
 Then use telemetry in your API routes:
+
+#### Without Freeplay prompt management (pure OpenTelemetry)
 
 ```ts
 // app/api/chat/route.ts
@@ -85,6 +112,49 @@ export async function POST(req: Request) {
         sessionId: chatId,
       },
     },
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+#### With Freeplay prompt management
+
+```ts
+// app/api/chat/route.ts
+import { streamText } from "ai";
+import {
+  getPrompt,
+  FreeplayModel,
+  createFreeplayTelemetry,
+} from "@freeplayai/vercel";
+
+export async function POST(req: Request) {
+  const { messages, chatId } = await req.json();
+
+  const inputVariables = {
+    accent: "cowboy",
+  };
+
+  // Get prompt from Freeplay
+  const prompt = await getPrompt({
+    templateName: "funny-accent", // Replace with your prompt name
+    variables: inputVariables,
+    messages,
+  });
+
+  // Automatically select the correct model provider based on the prompt
+  const model = await FreeplayModel(prompt);
+
+  const result = streamText({
+    model,
+    messages,
+    system: prompt.systemContent,
+    experimental_telemetry: createFreeplayTelemetry(prompt, {
+      functionId: "nextjs-streamText",
+      sessionId: chatId,
+      inputVariables,
+    }),
   });
 
   return result.toDataStreamResponse();
@@ -112,7 +182,7 @@ process.on("SIGTERM", async () => {
 });
 ```
 
-Then use telemetry in your AI calls:
+#### Without Freeplay prompt management (pure OpenTelemetry)
 
 ```ts
 import { anthropic } from "@ai-sdk/anthropic";
@@ -131,19 +201,48 @@ const result = streamText({
 });
 ```
 
-## How It Works
+#### With Freeplay prompt management
 
-The span processor:
+```ts
+import {
+  getPrompt,
+  FreeplayModel,
+  createFreeplayTelemetry,
+} from "@freeplayai/vercel";
+import { streamText } from "ai";
 
-1. Intercepts spans from the Vercel AI SDK
-2. Maps AI SDK attributes to Freeplay's format
-3. Buffers tool spans until their parent LLM span arrives
-4. Links tool calls with parent spans and session metadata
-5. Exports processed spans to Freeplay via OTLP/HTTP
+// Define input variables for your prompt
+const inputVariables = {
+  accent: "cowboy",
+};
 
-## Configuration
+// Get prompt from Freeplay
+const prompt = await getPrompt({
+  templateName: "funny-accent",
+  variables: inputVariables,
+  messages,
+});
+
+// Automatically select the correct model provider based on the prompt
+const model = await FreeplayModel(prompt);
+
+const result = streamText({
+  model,
+  system: prompt.systemContent,
+  messages,
+  experimental_telemetry: createFreeplayTelemetry(prompt, {
+    functionId: "chat-function",
+    sessionId: chatId,
+    inputVariables,
+  }),
+});
+```
+
+## Documentation
 
 ### `createFreeplaySpanProcessor(options?)`
+
+Creates a span processor that handles OpenTelemetry trace export to Freeplay, including attribute mapping and tool call linking.
 
 ```ts
 interface CreateFreeplaySpanProcessorOptions {
@@ -156,104 +255,87 @@ interface CreateFreeplaySpanProcessorOptions {
 **Example:**
 
 ```ts
+createFreeplaySpanProcessor();
+
+// or with explicit options
 createFreeplaySpanProcessor({
-  apiKey: "fp_...",
-  projectId: "my-project-123",
-  endpoint: "https://custom.freeplay.ai/api/v0/otel/v1/traces",
+  apiKey: string,
+  projectId: string,
+  endpoint: string,
 });
 ```
 
-## Advanced Usage
+### `createFreeplayTelemetry(prompt, options)`
 
-### Tool Call Tracing
-
-Tool calls are automatically traced and linked to their parent LLM spans:
+Creates a telemetry configuration object for use with Vercel AI SDK's `experimental_telemetry`. Automatically extracts and attaches Freeplay prompt metadata from the prompt object.
 
 ```ts
-import { tool } from "ai";
-import { z } from "zod";
-
-const result = streamText({
-  model: anthropic("claude-haiku-4-5"),
-  tools: {
-    add: tool({
-      description: "Add two numbers",
-      parameters: z.object({
-        a: z.number(),
-        b: z.number(),
-      }),
-      execute: async ({ a, b }) => a + b,
-    }),
-    multiply: tool({
-      description: "Multiply two numbers",
-      parameters: z.object({
-        a: z.number(),
-        b: z.number(),
-      }),
-      execute: async ({ a, b }) => a * b,
-    }),
-  },
-  prompt: "What is 5 plus 3, then multiply that by 2?",
-  experimental_telemetry: {
-    isEnabled: true,
-    functionId: "math-calculation",
-    metadata: {
-      sessionId: chatId,
-    },
-  },
-});
+interface CreateFreeplayTelemetryOptions {
+  functionId: string;
+  sessionId: string;
+  inputVariables?: Record<string, any>;
+  additionalMetadata?: Record<string, any>;
+}
 ```
 
-### MCP (Model Context Protocol) Support
-
-The library works seamlessly with MCP tools. See the [examples](./examples/) for complete implementations:
+**Example:**
 
 ```ts
-import { experimental_createMCPClient } from "ai";
-
-const client = await experimental_createMCPClient({ transport });
-const tools = await client.tools();
-
-const result = streamText({
-  model: anthropic("claude-haiku-4-5"),
-  tools, // MCP tools are automatically traced
-  experimental_telemetry: {
-    isEnabled: true,
-    functionId: "mcp-chat",
-  },
+createFreeplayTelemetry(prompt, {
+  functionId: "nextjs-streamText",
+  sessionId: chatId,
+  inputVariables: { accent: "cowboy" },
+  additionalMetadata: { userId: "user-123" },
 });
 ```
 
-## Examples
+### `getPrompt(options)`
 
-Ready-to-run examples demonstrating integration with popular frameworks:
+Fetches a formatted prompt from Freeplay with the specified template name and variables.
 
-- **[Next.js Example](./examples/next/)** - Full-featured Next.js app with MCP support
-- **[Node.js Example](./examples/node/)** - Express backend + React frontend with streaming
+```ts
+async function getPrompt(options: {
+  templateName: string;
+  messages: ModelMessage[];
+  environment?: string;
+  projectID?: string;
+  variables?: InputVariables;
+}): Promise<FormattedPrompt<ProviderMessage>>;
+```
 
-## Development
+**Example:**
 
-```bash
-# Install dependencies
-pnpm install
+```ts
+const prompt = await getPrompt({
+  templateName: "funny-accent",
+  messages: conversationHistory,
+  environment: "production",
+  variables: { accent: "cowboy" },
+});
+```
 
-# Build package
-pnpm build
+### `FreeplayModel(prompt)`
 
-# Type checking
-pnpm typecheck
+Creates a model instance using the model string from the prompt result and automatically selects the appropriate AI SDK provider.
 
-# Lint and format
-pnpm lint
-pnpm format
+Supports direct use of OpenAI, Anthropic, Google, and Vertex AI, or proxying via the Vercel AI Gateway.
+
+**Example:**
+
+```ts
+const prompt = await getPrompt({ templateName: "my-template", messages: [] });
+const model = await FreeplayModel(prompt);
+
+// model is now configured with the correct provider (openai, anthropic, google, or vertex) or proxied via the Vercel AI Gateway
+const result = await streamText({
+  model,
+  messages,
+  system: prompt.systemContent,
+});
 ```
 
 ## Requirements
 
 - Node.js ≥18
 - TypeScript ≥5.0 (for development)
-- Vercel AI SDK with `experimental_telemetry` support
-
-## License
-
-MIT
+- Vercel AI SDK v5.0.0 or later

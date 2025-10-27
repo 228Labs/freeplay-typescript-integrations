@@ -1,33 +1,23 @@
 # Freeplay Vercel AI SDK Examples
 
-Example applications demonstrating how to use the Freeplay Vercel AI SDK in different environments.
-
-## Examples
-
 Ready-to-run examples demonstrating integration with popular frameworks:
 
-- **[Next.js Example](./next/)** - Full-featured Next.js app with MCP support
-- **[Node.js Example](./node/)** - Express backend + React frontend with streaming
-- **[Test Run Example](./test-run/)** - End-to-end test runner for trace datasets
+- **[Next.js Example](./next/README.md)** - Next.js agent chat with simple tool support
+- **[Node.js Example](./node/README.md)** - Node.js agent chat with simple tool support
 
-## Usage
+## How to run
 
-Each example can be run in two ways:
+### Direct Run (Recommended for Testing)
 
-### Clone & Run (Development/Testing)
-
-From the repository root:
+From the `freeplay-typescript-integrations` repository root:
 
 ```bash
 pnpm install
 pnpm example:next      # Run Next.js example
 pnpm example:node      # Run Node.js example
-pnpm example:test-run  # Run test-run example
 ```
 
-This uses workspace dependencies and is ideal for testing or contributing.
-
-### Standalone (Starting Your Own Project)
+### Standalone Setup (For Your Own Project)
 
 Each example can be copied out and used independently. The examples reference the published `@freeplayai/vercel` package from npm, so they work as standalone starting points for your own projects.
 

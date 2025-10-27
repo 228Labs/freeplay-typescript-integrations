@@ -4,11 +4,13 @@
 
 Demonstrates a Node.js Express backend with a React frontend using the Vercel AI SDK instrumented with Freeplay's Vercel OpenTelemetry integration.
 
-## Quick Start
+## How to run
 
-### Option 1: Clone & Run (Recommended for Testing)
+### Environment Setup
 
-The easiest way to run this example from the repository:
+Create a `.env` or `.env.local` file within the `examples` directory, following the format specified [here](../../README.md#environment).
+
+### Option 1: Direct Run (Recommended for Testing)
 
 ```bash
 # From repository root - installs all dependencies
@@ -46,15 +48,3 @@ cd ../client
 npm install
 npm run dev
 ```
-
-### Environment Variables
-
-Server requires these variables in `server/.env`:
-
-```env
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-FREEPLAY_API_KEY=your_freeplay_api_key_here
-FREEPLAY_PROJECT_ID=your_freeplay_project_id_here
-```
-
-See the [main README](../../README.md) for how to obtain Freeplay credentials.
