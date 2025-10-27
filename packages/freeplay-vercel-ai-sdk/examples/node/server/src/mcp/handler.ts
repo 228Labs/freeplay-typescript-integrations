@@ -1,8 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import {
-  handleMcpRequest,
-  McpServerConfig,
-} from "../../../../shared/mcp/server-core.js";
+import { handleMcpRequest, McpServerConfig } from "./server-core.js";
 
 /**
  * Creates an MCP handler for Express that wraps the shared core logic

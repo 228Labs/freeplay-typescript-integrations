@@ -1,6 +1,6 @@
 import { ServerResponse } from "http";
 import { NextRequest } from "next/server";
-import { handleMcpRequest, McpServerConfig } from "@shared/mcp/server-core";
+import { handleMcpRequest, McpServerConfig } from "./server-core";
 import { convertNextRequestToIncomingMessage } from "./incoming-message";
 
 /**

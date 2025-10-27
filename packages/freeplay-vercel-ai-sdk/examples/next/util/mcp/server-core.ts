@@ -5,7 +5,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { registerDefaultTools } from "./tools";
 
 /**
- * Core MCP server configuration and utilities shared across implementations
+ * Core MCP server configuration and utilities
  */
 
 export interface McpServerConfig {

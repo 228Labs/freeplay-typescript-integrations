@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
-  - "packages/*/examples/shared"
   - "packages/*/examples/next"
+  - "packages/*/examples/node"
   - "packages/*/examples/node/server"
   - "packages/*/examples/node/client"
+  # - "packages/*/examples/test-run"  # Disabled - work in progress

@@ -8,7 +8,6 @@
     "typescript",
     "vercel",
     "ai",
-    "freeplay",
     "opentelemetry",
     "otel",
     "telemetry",
@@ -46,10 +45,30 @@
     }
   },
   "peerDependencies": {
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "@ai-sdk/google-vertex": "^3.0.0",
+    "@ai-sdk/openai": "^2.0.0",
     "@arizeai/openinference-vercel": "^2.3.4",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-trace-base": "^2.1.0",
-    "@vercel/otel": "^2.0.1"
+    "@vercel/otel": "^2.0.1",
+    "ai": "^5.0.0",
+    "freeplay": "^0.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/anthropic": {
+      "optional": true
+    },
+    "@ai-sdk/google": {
+      "optional": true
+    },
+    "@ai-sdk/google-vertex": {
+      "optional": true
+    },
+    "@ai-sdk/openai": {
+      "optional": true
+    }
   },
   "files": [
     "dist",
@@ -73,11 +92,17 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
+    "@ai-sdk/anthropic": "^2.0.37",
+    "@ai-sdk/google": "^2.0.23",
+    "@ai-sdk/google-vertex": "^3.0.53",
+    "@ai-sdk/openai": "^2.0.53",
     "@arizeai/openinference-vercel": "^2.3.4",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-trace-base": "^2.1.0",
     "@types/node": "^24.9.1",
     "@vercel/otel": "^2.0.1",
+    "ai": "^5.0.77",
+    "freeplay": "^0.5.1",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   }

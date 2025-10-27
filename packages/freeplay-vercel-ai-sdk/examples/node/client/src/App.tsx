@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Message } from '../../../shared/types';
-import ChatInput from '../../../shared/components/ChatInput';
+import { Message } from './types';
+import ChatInput from './components/ChatInput';
 import './components/ChatInput.css';
 import './App.css';
 

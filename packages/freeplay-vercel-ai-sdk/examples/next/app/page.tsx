@@ -1,6 +1,6 @@
 'use client';
 
-import ChatInput from '@shared/components/ChatInput';
+import ChatInput from '../components/ChatInput';
 import {useChat} from '@ai-sdk/react';
 import {DefaultChatTransport} from 'ai';
 import {useState} from 'react';

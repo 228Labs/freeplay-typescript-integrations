@@ -1,1 +1,6 @@
-export { createFreeplaySpanProcessor } from "./telemetry.js";
+export {
+  createFreeplaySpanProcessor,
+  createFreeplayTelemetry,
+  type CreateFreeplayTelemetryOptions,
+} from "./telemetry.js";
+export { getPrompt, FreeplayModel } from "./prompts.js";

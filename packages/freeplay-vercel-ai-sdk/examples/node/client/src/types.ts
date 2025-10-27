@@ -1,5 +1,5 @@
 /**
- * Shared types used across Next.js and Node.js examples
+ * Shared types used across the client
  */
 
 export interface Message {

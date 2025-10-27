@@ -11,6 +11,7 @@ import {
   extractToolCallIdsFromResponse,
   flushBufferedToolSpans,
 } from "./tools.js";
+import type { FormattedPrompt, ProviderMessage } from "freeplay";
 
 /**
  * Helper type to allow mutation of ReadableSpan properties.
@@ -123,6 +124,22 @@ const sanitizeSpanAttributes = (span: ReadableSpan): void => {
 const applyStandardAttributeMappings = (span: ReadableSpan): void => {
   const attrs = (span.attributes ?? {}) as Attributes;
 
+  // 1) Collect all ai.telemetry.metadata.* keys into a metadata object
+  const metadataPrefix = "ai.telemetry.metadata.";
+  const metadata: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key.startsWith(metadataPrefix)) {
+      const newKey = key.slice(metadataPrefix.length);
+      metadata[newKey] = value;
+    }
+  }
+
+  // Add the metadata object if we found any metadata keys
+  if (Object.keys(metadata).length > 0) {
+    attrs["metadata"] = JSON.stringify(metadata);
+  }
+
   // 2) Map functionId: ai.telemetry.functionId -> span.name
   const functionIdRaw = attrs["ai.telemetry.functionId"];
   if (functionIdRaw != null) {
@@ -210,5 +227,87 @@ const createBufferingExporter = (delegate: SpanExporter): SpanExporter => {
     },
     shutdown: () => delegate.shutdown(),
     forceFlush: () => delegate.forceFlush?.() ?? Promise.resolve(),
+  };
+};
+
+export interface CreateFreeplayTelemetryOptions {
+  /**
+   * A unique identifier for this function/operation.
+   * This will be used as the span name in the telemetry.
+   */
+  functionId: string;
+  /**
+   * Session ID to group related telemetry events together.
+   */
+  sessionId: string;
+  /**
+   * Optional input variables used when formatting the prompt.
+   * Will be stringified and attached as metadata.
+   */
+  inputVariables?: Record<string, any>;
+  /**
+   * Optional additional metadata to attach to the telemetry.
+   */
+  additionalMetadata?: Record<string, any>;
+}
+
+/**
+ * Creates a telemetry configuration object for use with Vercel AI SDK's experimental_telemetry.
+ * Automatically extracts and attaches Freeplay prompt metadata from the prompt object.
+ *
+ * @param prompt - The formatted prompt result from getPrompt()
+ * @param options - Configuration options including functionId, sessionId, and optional variables
+ * @returns A telemetry configuration object ready to pass to streamText/generateText
+ *
+ * @example
+ * ```typescript
+ * import { getPrompt, FreeplayModel, createFreeplayTelemetry } from 'freeplay-vercel-ai-sdk';
+ *
+ * const inputVariables = { accent: 'cowboy' };
+ * const prompt = await getPrompt({
+ *   templateName: 'funny-accent',
+ *   variables: inputVariables
+ * });
+ * const model = await FreeplayModel(prompt);
+ *
+ * const result = streamText({
+ *   model,
+ *   system: prompt.systemContent,
+ *   messages,
+ *   experimental_telemetry: createFreeplayTelemetry(prompt, {
+ *     functionId: 'chat-endpoint',
+ *     sessionId: conversationId,
+ *     inputVariables
+ *   })
+ * });
+ * ```
+ */
+export const createFreeplayTelemetry = (
+  prompt: FormattedPrompt<ProviderMessage>,
+  options: CreateFreeplayTelemetryOptions,
+) => {
+  const metadata: Record<string, any> = {
+    sessionId: options.sessionId,
+    "freeplay.prompt_template.version.id":
+      prompt.promptInfo.promptTemplateVersionId,
+    "freeplay.prompt_template.id": prompt.promptInfo.promptTemplateId,
+  };
+
+  // Add input variables if provided
+  if (options.inputVariables) {
+    metadata["freeplay.input_variables"] = JSON.stringify(
+      options.inputVariables,
+    );
+  }
+
+  // Merge any additional metadata
+  if (options.additionalMetadata) {
+    Object.assign(metadata, options.additionalMetadata);
+  }
+
+  return {
+    isEnabled: true,
+    functionId: options.functionId,
+    metadata,
   };
 };

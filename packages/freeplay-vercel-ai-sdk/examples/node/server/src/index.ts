@@ -1,13 +1,22 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { experimental_createMCPClient, stepCountIs, streamText } from "ai";
+import {
+  experimental_createMCPClient,
+  ModelMessage,
+  stepCountIs,
+  streamText,
+} from "ai";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createFreeplaySpanProcessor } from "freeplay-vercel-ai-sdk";
+import {
+  createFreeplaySpanProcessor,
+  getPrompt,
+  FreeplayModel,
+  createFreeplayTelemetry,
+} from "freeplay-vercel-ai-sdk";
 import {
   expressToIncomingMessage,
   wrapExpressResponse,
@@ -56,6 +65,20 @@ app.post("/api/mcp/chat", async (req, res) => {
   try {
     const { messages, sessionId } = req.body;
 
+    const inputVariables = {
+      accent: "cowboy",
+    };
+
+    // Get prompt from Freeplay
+    const prompt = await getPrompt({
+      templateName: "funny-accent", // TODO: Replace with your prompt name
+      variables: inputVariables,
+      messages,
+    });
+
+    // Automatically select the correct model provider based on the prompt
+    const model = await FreeplayModel(prompt);
+
     // Create MCP client connecting to our local server
     const transport = new StreamableHTTPClientTransport(
       new URL(`http://localhost:${PORT}/api/mcp/server`),
@@ -68,21 +91,26 @@ app.post("/api/mcp/chat", async (req, res) => {
     const tools = await client.tools();
 
     const result = streamText({
-      model: anthropic("claude-haiku-4-5"),
+      model,
       tools,
       stopWhen: stepCountIs(5),
-      system: "You are a helpful chatbot capable of basic arithmetic problems",
-      messages,
+      onStepFinish: async ({ toolResults }) => {
+        console.log(`STEP RESULTS: ${JSON.stringify(toolResults, null, 2)}`);
+      },
+      system: prompt.systemContent,
+      messages: messages,
       onFinish: async () => {
         await client.close();
       },
-      experimental_telemetry: {
-        isEnabled: true,
-        functionId: "rob test",
-        metadata: {
-          sessionId: sessionId || "default",
-        },
-      },
+      experimental_telemetry: createFreeplayTelemetry(prompt, {
+        functionId: "demo for rob",
+        sessionId: sessionId,
+        inputVariables,
+      }),
+      // Optional, enables immediate clean up of resources but connection will not be retained for retries:
+      // onError: async error => {
+      //   await client.close();
+      // },
     });
 
     // Set headers for streaming
@@ -100,8 +128,8 @@ app.post("/api/mcp/chat", async (req, res) => {
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (error) {
-    console.error("MCP Chat Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(error);
+    res.status(500).json({ error: "Unexpected error" });
   }
 });
 
