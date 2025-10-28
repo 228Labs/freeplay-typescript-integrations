@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       model: openai("gpt-4o"),
       tools,
       stopWhen: stepCountIs(5),
+      system: "You are a helpful assistant.",
       messages: convertToModelMessages(messages),
       onFinish: async () => {
         await client.close();

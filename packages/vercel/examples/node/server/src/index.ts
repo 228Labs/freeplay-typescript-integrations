@@ -197,6 +197,7 @@ app.post("/api/mcp/chat/static", async (req, res) => {
       model: openai("gpt-4.1"),
       tools,
       stopWhen: stepCountIs(5),
+      system: "You are a helpful assistant.",
       messages: messages,
       onFinish: async () => {
         await client.close();
