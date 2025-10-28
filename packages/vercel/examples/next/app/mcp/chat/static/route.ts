@@ -5,11 +5,7 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import {
-  getPrompt,
-  FreeplayModel,
-  createFreeplayTelemetry,
-} from "@freeplayai/vercel";
+import { openai } from "@ai-sdk/openai";
 
 export async function POST(req: Request) {
   const url = new URL("http://localhost:3000/mcp/server");
@@ -23,45 +19,23 @@ export async function POST(req: Request) {
   ]);
 
   try {
-    const inputVariables = {
-      character: "Cowboy",
-    };
-
-    /**
-     * Get prompt from Freeplay
-     *
-     * This prompt is set up as:
-     *
-     * {
-     *   "role": "system",
-     *   "content": "Please answer the user's queries by playing the character of a {{character}}"
-     * }
-     */
-    const prompt = await getPrompt({
-      templateName: "support-character", // TODO: Replace with your prompt name
-      variables: inputVariables,
-      messages,
-    });
-
-    // Automatically select the correct model provider based on the prompt
-    const model = await FreeplayModel(prompt);
-
     const tools = await client.tools();
 
     const result = streamText({
-      model,
+      model: openai("gpt-4o"),
       tools,
       stopWhen: stepCountIs(5),
-      system: prompt.systemContent,
       messages: convertToModelMessages(messages),
       onFinish: async () => {
         await client.close();
       },
-      experimental_telemetry: createFreeplayTelemetry(prompt, {
-        functionId: "next-example-with-freeplay",
-        sessionId: id,
-        inputVariables,
-      }),
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "next-example-static",
+        metadata: {
+          sessionId: id,
+        },
+      },
     });
 
     return result.toUIMessageStreamResponse();

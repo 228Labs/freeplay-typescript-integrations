@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "pnpm --parallel -r dev",
-    "dev:server": "pnpm --filter server dev",
-    "dev:client": "pnpm --filter client dev",
+    "dev": "pnpm --parallel --filter './server' --filter './client' dev",
+    "dev:server": "pnpm --filter './server' dev",
+    "dev:client": "pnpm --filter './client' dev",
     "install:all": "pnpm install -r"
   }
 }

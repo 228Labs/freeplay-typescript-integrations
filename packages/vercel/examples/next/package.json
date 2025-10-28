@@ -21,7 +21,7 @@
     "@vercel/otel": "^2.0.1",
     "ai": "^5.0.44",
     "freeplay": "^0.5.1",
-    "@freeplayai/vercel": "^0.1.0",
+    "@freeplayai/vercel": "^0.1.1",
     "next": "^15.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

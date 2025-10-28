@@ -29,6 +29,154 @@ h1 {
   margin: 0;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #e8e8e8;
+}
+
+.implementation-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.implementation-card {
+  padding: 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.implementation-card:hover {
+  border-color: #4a90e2;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+  transform: translateY(-2px);
+}
+
+.implementation-card h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #333;
+}
+
+.implementation-card p {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.select-button {
+  padding: 0.75rem 1.5rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+
+.select-button:hover {
+  background: #357abd;
+}
+
+.implementation-card:hover .select-button {
+  background: #357abd;
+}
+
+.validation-status {
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.validation-status.validating {
+  background: #f0f7ff;
+  border: 1px solid #b3d9ff;
+  color: #0066cc;
+}
+
+.validation-status.error {
+  background: #fff5f5;
+  border: 1px solid #ffcccc;
+  color: #cc0000;
+}
+
+.validation-status.warning {
+  background: #fffbf0;
+  border: 1px solid #ffe8b3;
+  color: #996600;
+}
+
+.validation-status strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.validation-status p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.validation-status ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.validation-status li {
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.validation-status .help-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.validation-status code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.85em;
+}
+
+.validation-status a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.validation-status a:hover {
+  opacity: 0.8;
+}
+
 .messages {
   min-height: 300px;
   max-height: 500px;
