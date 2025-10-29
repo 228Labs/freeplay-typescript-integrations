@@ -1,6 +1,6 @@
 {
   "name": "@freeplayai/vercel",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenTelemetry instrumentation for Vercel AI SDK with Freeplay integration - production-ready tracing and telemetry.",
   "keywords": [
     "freeplay",
