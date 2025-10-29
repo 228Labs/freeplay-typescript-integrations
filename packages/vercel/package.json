@@ -20,7 +20,7 @@
   "author": "228Labs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/freeplay-ai/vercel.git",
+    "url": "https://github.com/228labs/freeplay-typescript-integrations.git",
     "directory": "packages/vercel"
   },
   "homepage": "https://github.com/freeplay-ai/vercel#readme",
